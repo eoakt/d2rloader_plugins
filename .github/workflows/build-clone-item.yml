@@ -5,7 +5,8 @@ on:
 
 jobs:
   build:
-      runs-on: windows-2022
+    runs-on: windows-2022
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -19,42 +20,24 @@ jobs:
       - name: Find DLL
         shell: pwsh
         run: |
-          $dll = Get-ChildItem `
-            -Path build `
-            -Filter "d2rl-celestialrayone-clone-item.dll" `
-            -Recurse `
-            -File |
-            Select-Object -First 1
-
+          $dll = Get-ChildItem -Path build -Filter "d2rl-celestialrayone-clone-item.dll" -Recurse -File | Select-Object -First 1
           if ($null -eq $dll) {
             Write-Error "DLL not found"
             exit 1
           }
-
-          Write-Host "DLL found:"
-          Write-Host $dll.FullName
+          Write-Host "DLL found: $($dll.FullName)"
           Write-Host "Size: $($dll.Length) bytes"
 
       - name: Prepare artifact
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force artifact | Out-Null
-
-          $dll = Get-ChildItem `
-            -Path build `
-            -Filter "d2rl-celestialrayone-clone-item.dll" `
-            -Recurse `
-            -File |
-            Select-Object -First 1
-
+          $dll = Get-ChildItem -Path build -Filter "d2rl-celestialrayone-clone-item.dll" -Recurse -File | Select-Object -First 1
           if ($null -eq $dll) {
             Write-Error "DLL not found"
             exit 1
           }
-
-          Copy-Item `
-            $dll.FullName `
-            "artifact\d2rl-celestialrayone-clone-item.dll"
+          Copy-Item $dll.FullName "artifact\d2rl-celestialrayone-clone-item.dll"
 
       - name: Upload DLL
         uses: actions/upload-artifact@v4
