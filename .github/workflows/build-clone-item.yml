@@ -1,4 +1,4 @@
-name: Build Clone Item
+name: Build D2RLoader Clone Item
 
 on:
   workflow_dispatch:
@@ -8,7 +8,59 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      - name: Build
-        run: echo "GitHub Actions is working"
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build clone-item
+        run: cmake --build build --config Release --target d2rl-celestialrayone-clone-item --parallel
+
+      - name: Find DLL
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem `
+            -Path build `
+            -Filter "d2rl-celestialrayone-clone-item.dll" `
+            -Recurse `
+            -File |
+            Select-Object -First 1
+
+          if ($null -eq $dll) {
+            Write-Error "DLL not found"
+            exit 1
+          }
+
+          Write-Host "DLL found:"
+          Write-Host $dll.FullName
+          Write-Host "Size: $($dll.Length) bytes"
+
+      - name: Prepare artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifact | Out-Null
+
+          $dll = Get-ChildItem `
+            -Path build `
+            -Filter "d2rl-celestialrayone-clone-item.dll" `
+            -Recurse `
+            -File |
+            Select-Object -First 1
+
+          if ($null -eq $dll) {
+            Write-Error "DLL not found"
+            exit 1
+          }
+
+          Copy-Item `
+            $dll.FullName `
+            "artifact\d2rl-celestialrayone-clone-item.dll"
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: d2rl-celestialrayone-clone-item
+          path: artifact/d2rl-celestialrayone-clone-item.dll
+          if-no-files-found: error
+          retention-days: 30
