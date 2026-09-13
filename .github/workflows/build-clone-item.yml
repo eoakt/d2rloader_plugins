@@ -1,0 +1,14 @@
+name: Build Clone Item
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: echo "GitHub Actions is working"
